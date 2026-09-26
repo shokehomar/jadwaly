@@ -1,0 +1,1 @@
+// Static data: IB_SUBJECTS (by group), TASK_TYPES (IA, EE, TOK, CAS, Test, University, Study), STATUSES, PRIORITIES, WEEKDAYS, SUBJECT_COLORS, NAV_ITEMS.
