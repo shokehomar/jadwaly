@@ -9,6 +9,28 @@ import {
   PenLine,
   type LucideIcon,
 } from "lucide-react";
+import type { Priority, TaskStatus, TaskType } from "@/types";
+
+export const TASK_TYPES = [
+  "IA",
+  "EE",
+  "TOK",
+  "CAS",
+  "Test",
+  "University",
+  "Study",
+] as const satisfies readonly TaskType[];
+
+/** Task types only diploma students see */
+export const DIPLOMA_ONLY_TASK_TYPES: readonly TaskType[] = ["EE", "TOK", "CAS"];
+
+export const STATUSES = [
+  "Not started",
+  "In progress",
+  "Completed",
+] as const satisfies readonly TaskStatus[];
+
+export const PRIORITIES = ["Low", "Medium", "High"] as const satisfies readonly Priority[];
 
 export interface NavItem {
   label: string;
