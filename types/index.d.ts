@@ -97,3 +97,35 @@ export interface StudyLog {
 
 // Milestones are regular tasks (see CLAUDE.md): an IA milestone is a task with
 // type "IA" and a subject; EE and TOK milestones use those types.
+
+// Scheduler output (lib/study-plan.ts). Not database rows, so camelCase.
+
+export type SessionReason = "regular" | "exam prep" | "carried over";
+
+/** One study session on a day. Sessions have no set time. */
+export interface StudySession {
+  subjectId: string;
+  minutes: number;
+  reason: SessionReason;
+}
+
+export interface DayPlan {
+  /** "YYYY-MM-DD" */
+  date: string;
+  sessions: StudySession[];
+}
+
+/** A session the scheduler had to move but found no room for. */
+export interface UnscheduledSession {
+  subjectId: string;
+  minutes: number;
+  /** The day it was originally planned */
+  fromDate: string;
+  cause: "missed" | "over cap";
+}
+
+export interface WeekPlan {
+  /** Monday to Sunday */
+  days: DayPlan[];
+  couldNotFit: UnscheduledSession[];
+}
