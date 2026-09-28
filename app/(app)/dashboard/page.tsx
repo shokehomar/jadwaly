@@ -1,6 +1,6 @@
 "use client";
 
-// Home: greeting, stat cards, today's study plan, upcoming deadlines, task board, month calendar.
+// Home: greeting, stat cards, today's study plan, upcoming exams, upcoming deadlines, task board, month calendar.
 // Imports: @/components/dashboard/*, @/components/providers/DataProvider
 
 import { MonthCalendar } from "@/components/dashboard/MonthCalendar";
@@ -8,7 +8,9 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { TaskBoard } from "@/components/dashboard/TaskBoard";
 import { TodayPlan } from "@/components/dashboard/TodayPlan";
 import { UpcomingDeadlines } from "@/components/dashboard/UpcomingDeadlines";
+import { UpcomingExams } from "@/components/dashboard/UpcomingExams";
 import { useData } from "@/components/providers/DataProvider";
+import { AddTaskButton } from "@/components/tasks/AddTaskButton";
 import { addDays, formatDueDate, todayString } from "@/lib/utils";
 
 export default function DashboardPage() {
@@ -34,9 +36,12 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Hi, {profile.name}</h1>
-        <p className="text-sm text-muted-foreground">{formatDueDate(today)}</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Hi, {profile.name}</h1>
+          <p className="text-sm text-muted-foreground">{formatDueDate(today)}</p>
+        </div>
+        <AddTaskButton />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -60,6 +65,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-6">
           <TodayPlan />
+          <UpcomingExams />
           <UpcomingDeadlines />
         </div>
         <div className="min-w-0">

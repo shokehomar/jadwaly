@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { NewTask } from "@/components/providers/DataProvider";
 import type { Task } from "@/types";
 import { TaskForm } from "./TaskForm";
 
@@ -19,9 +20,11 @@ interface TaskDialogProps {
   onOpenChange: (open: boolean) => void;
   /** Edit this task; leave out to add a new one */
   task?: Task;
+  /** Starting values when adding a new task */
+  defaults?: Partial<NewTask>;
 }
 
-export function TaskDialog({ open, onOpenChange, task }: TaskDialogProps) {
+export function TaskDialog({ open, onOpenChange, task, defaults }: TaskDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
@@ -32,7 +35,7 @@ export function TaskDialog({ open, onOpenChange, task }: TaskDialogProps) {
           </DialogDescription>
         </DialogHeader>
         {/* Content unmounts when closed, so the form resets each time it opens */}
-        <TaskForm task={task} onDone={() => onOpenChange(false)} />
+        <TaskForm task={task} defaults={defaults} onDone={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );

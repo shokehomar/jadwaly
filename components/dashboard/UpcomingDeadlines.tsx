@@ -1,6 +1,7 @@
 "use client";
 
 // Next 7 days of tasks (today included), overdue pinned on top. Completed tasks are left out.
+// Exams are left out too; they have their own section (UpcomingExams).
 // Imports: @/components/tasks/TaskCard. Used by: dashboard
 
 import { useData } from "@/components/providers/DataProvider";
@@ -19,7 +20,7 @@ export function UpcomingDeadlines() {
 
   const today = todayString();
   const lastDay = addDays(today, 6);
-  const open = tasks.filter((t) => t.status !== "Completed");
+  const open = tasks.filter((t) => t.status !== "Completed" && t.type !== "Exam");
   const overdue = open.filter((t) => t.due_date < today).sort(byDueDate);
   const upcoming = open
     .filter((t) => t.due_date >= today && t.due_date <= lastDay)

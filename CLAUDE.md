@@ -40,16 +40,41 @@ profiles
 
 subjects
 - id, user_id, name, level (HL or SL), color (hex), predicted_grade (1 to 7, optional)
-- Study plan lives on the subject: min_hours_week, max_hours_week, study_days (array of 0 to 6, 0 = Sunday)
+- Study plan: session_minutes (int), study_days (array of 0 to 6, 0 = Sunday), priority (High, Medium, Low; default Medium)
+- Onboarding offers frequency presets (every day, every other day, weekends, custom) that all save as study_days.
+
+profiles also has daily_cap_minutes (int, default 240).
 
 tasks
-- id, user_id, subject_id (optional), title, type (IA, EE, TOK, CAS, Test, University, Study), due_date, status (Not started, In progress, Completed), priority (Low, Medium, High), notes (optional)
+- id, user_id, subject_id (optional), title, type (IA, EE, TOK, CAS, Exam, University, Study), due_date, status (Not started, In progress, Completed), priority (Low, Medium, High), notes (optional)
 - There is no Homework type. IB students here mostly work on long-running assessments, not daily homework.
+tasks: type Test is renamed to Exam. Exams are tasks with type Exam and a subject.
+
+extracurriculars
+- id, user_id, name, days (array of 0 to 6), start_time (HH:MM), duration_minutes
+
+study_logs (a study session marked done)
+- id, user_id, subject_id, date, minutes
 
 assessments
 - id, user_id, subject_id, name, date, score, max_score
 
-Undecided: whether IA, EE, and TOK milestones are regular tasks or a separate table. Ask before building anything that depends on this.
+## Scheduling (lib/study-plan.ts)
+Pure functions only. Main function: generateWeek(weekStart, today, profile, subjects, tasks, studyLogs) returns, for each day Monday to Sunday, a list of sessions { subjectId, minutes, reason: "regular" | "exam prep" | "carried over" } plus a list of sessions that couldn't fit.
+Constants: EXAM_PREP_DAYS = 3, EXAM_PREP_MINUTES = 60.
+
+Rules, in order:
+1. Base plan: each subject gets a session of session_minutes on each of its study_days.
+2. Exam prep: for each Exam task that isn't completed, add EXAM_PREP_MINUTES for that subject on each of the EXAM_PREP_DAYS days before the exam.
+3. Missed sessions: sessions on days before today with no matching study_log are missed.
+4. Daily cap: from today onward, if a day exceeds daily_cap_minutes, remove sessions lowest priority first until it fits. Never remove exam prep.
+5. Reschedule: missed and removed sessions, highest priority first, go to the earliest day from today to Sunday with room. If the subject has an upcoming exam, the session must land before the exam date.
+6. Anything that still doesn't fit goes in the "couldn't fit" list. Never drop a session silently.
+Sessions have no set times. Extracurriculars are shown on their days and hidden on days with an exam.
+
+
+Milestones: IA, EE, and TOK milestones are regular tasks. An IA milestone is a task with type IA and the subject set; EE and TOK milestones use those types. Order milestones by due date.
+
 Planned but not designed yet: extracurriculars (blocked time the scheduler must work around), CAS, university applications.
 
 ## Design
@@ -65,3 +90,7 @@ Planned but not designed yet: extracurriculars (blocked time the scheduler must 
 - Keep components small and in the folder their skeleton comment specifies.
 - Use TypeScript types from `types/` everywhere; no `any`.
 - After finishing a task, summarize which files changed and how to check the result in the browser.
+
+## Known issues (fix before launch)
+- "Today" is computed on the server and in the browser; students in a different time zone from the server may see the wrong day around midnight.
+- Predicted total shows out of 42; EE/TOK core points (0 to 3) aren't stored yet.

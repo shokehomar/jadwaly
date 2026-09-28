@@ -7,7 +7,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useData } from "@/components/providers/DataProvider";
+import { useData, type NewTask } from "@/components/providers/DataProvider";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -35,28 +35,33 @@ const taskSchema = z.object({
   status: z.enum(STATUSES),
   priority: z.enum(PRIORITIES),
   notes: z.string().trim().max(1000, "Keep notes under 1,000 characters"),
+}).refine((values) => values.type !== "Exam" || values.subject_id !== NO_SUBJECT, {
+  message: "Pick the subject this exam is for",
+  path: ["subject_id"],
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
 interface TaskFormProps {
   task?: Task;
+  /** Starting values for a new task, e.g. type and subject */
+  defaults?: Partial<NewTask>;
   onDone: () => void;
 }
 
-export function TaskForm({ task, onDone }: TaskFormProps) {
+export function TaskForm({ task, defaults, onDone }: TaskFormProps) {
   const { profile, subjects, addTask, updateTask } = useData();
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      title: task?.title ?? "",
-      type: task?.type ?? "Study",
-      subject_id: task?.subject_id ?? NO_SUBJECT,
-      due_date: task?.due_date ?? todayString(),
-      status: task?.status ?? "Not started",
-      priority: task?.priority ?? "Medium",
-      notes: task?.notes ?? "",
+      title: task?.title ?? defaults?.title ?? "",
+      type: task?.type ?? defaults?.type ?? "Study",
+      subject_id: task?.subject_id ?? defaults?.subject_id ?? NO_SUBJECT,
+      due_date: task?.due_date ?? defaults?.due_date ?? todayString(),
+      status: task?.status ?? defaults?.status ?? "Not started",
+      priority: task?.priority ?? defaults?.priority ?? "Medium",
+      notes: task?.notes ?? defaults?.notes ?? "",
     },
   });
 
@@ -135,15 +140,19 @@ export function TaskForm({ task, onDone }: TaskFormProps) {
           <Controller
             name="subject_id"
             control={form.control}
-            render={({ field }) => (
-              <Field>
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor="task-subject">Subject</FieldLabel>
                 <Select
                   items={subjectItems}
                   value={field.value}
                   onValueChange={(value) => value && field.onChange(value)}
                 >
-                  <SelectTrigger id="task-subject" className="w-full">
+                  <SelectTrigger
+                    id="task-subject"
+                    className="w-full"
+                    aria-invalid={fieldState.invalid}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -159,6 +168,7 @@ export function TaskForm({ task, onDone }: TaskFormProps) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FieldError errors={[fieldState.error]} />
               </Field>
             )}
           />

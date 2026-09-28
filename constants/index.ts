@@ -1,4 +1,4 @@
-// Static data: IB_SUBJECTS (by group), TASK_TYPES (IA, EE, TOK, CAS, Test, University, Study), STATUSES, PRIORITIES, WEEKDAYS, SUBJECT_COLORS, NAV_ITEMS.
+// Static data: IB_SUBJECTS (by group), TASK_TYPES (IA, EE, TOK, CAS, Exam, University, Study), STATUSES, PRIORITIES, WEEKDAYS, SUBJECT_COLORS, NAV_ITEMS.
 
 import {
   BookOpen,
@@ -9,14 +9,14 @@ import {
   PenLine,
   type LucideIcon,
 } from "lucide-react";
-import type { Priority, TaskStatus, TaskType } from "@/types";
+import type { Priority, TaskStatus, TaskType, Weekday } from "@/types";
 
 export const TASK_TYPES = [
   "IA",
   "EE",
   "TOK",
   "CAS",
-  "Test",
+  "Exam",
   "University",
   "Study",
 ] as const satisfies readonly TaskType[];
@@ -31,6 +31,20 @@ export const STATUSES = [
 ] as const satisfies readonly TaskStatus[];
 
 export const PRIORITIES = ["Low", "Medium", "High"] as const satisfies readonly Priority[];
+
+/** Indexed by Weekday (0 = Sunday), matching study_days */
+export const WEEKDAYS: { value: Weekday; short: string; long: string }[] = [
+  { value: 0, short: "Sun", long: "Sunday" },
+  { value: 1, short: "Mon", long: "Monday" },
+  { value: 2, short: "Tue", long: "Tuesday" },
+  { value: 3, short: "Wed", long: "Wednesday" },
+  { value: 4, short: "Thu", long: "Thursday" },
+  { value: 5, short: "Fri", long: "Friday" },
+  { value: 6, short: "Sat", long: "Saturday" },
+];
+
+/** Display order for weekdays: Monday first, like the calendar */
+export const WEEK_ORDER: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
 export interface NavItem {
   label: string;

@@ -1,4 +1,4 @@
-// Shared types: Profile, Subject, StudyPlan, Task, Milestone, Assessment.
+// Shared types: Profile, Subject, StudyPlan, Task, Milestone, Assessment, Extracurricular, StudyLog.
 // Shapes mirror the future database tables (see CLAUDE.md, Data model).
 // Nullable columns are typed `T | null`, matching what Supabase will return.
 // Dates are ISO strings ("YYYY-MM-DD").
@@ -13,7 +13,7 @@ export type TaskType =
   | "EE"
   | "TOK"
   | "CAS"
-  | "Test"
+  | "Exam"
   | "University"
   | "Study";
 
@@ -29,6 +29,8 @@ export interface Profile {
   /** false = non-diploma student: no CAS, EE, or TOK, and may take fewer than 6 subjects */
   diploma: boolean;
   onboarding_complete: boolean;
+  /** Most study minutes the scheduler may plan in one day (default 240) */
+  daily_cap_minutes: number;
 }
 
 export interface Subject {
@@ -40,16 +42,16 @@ export interface Subject {
   color: string;
   /** 1 to 7 */
   predicted_grade: number | null;
-  min_hours_week: number;
-  max_hours_week: number;
+  /** Length of one study session */
+  session_minutes: number;
+  /** Days with a session; onboarding presets (every day, weekends, ...) all save here */
   study_days: Weekday[];
+  /** Used by the scheduler when a day is over the cap (default "Medium") */
+  priority: Priority;
 }
 
 /** The study plan fields stored on a subject. */
-export type StudyPlan = Pick<
-  Subject,
-  "min_hours_week" | "max_hours_week" | "study_days"
->;
+export type StudyPlan = Pick<Subject, "session_minutes" | "study_days" | "priority">;
 
 export interface Task {
   id: string;
@@ -73,5 +75,25 @@ export interface Assessment {
   max_score: number;
 }
 
-// Milestone: not defined yet. Whether IA, EE, and TOK milestones are regular
-// tasks or a separate table is still undecided (see CLAUDE.md).
+/** Fixed weekly commitment, e.g. gym or club. */
+export interface Extracurricular {
+  id: string;
+  user_id: string;
+  name: string;
+  days: Weekday[];
+  /** 24-hour "HH:MM", e.g. "18:00" */
+  start_time: string;
+  duration_minutes: number;
+}
+
+/** A study session marked done. */
+export interface StudyLog {
+  id: string;
+  user_id: string;
+  subject_id: string;
+  date: string;
+  minutes: number;
+}
+
+// Milestones are regular tasks (see CLAUDE.md): an IA milestone is a task with
+// type "IA" and a subject; EE and TOK milestones use those types.
