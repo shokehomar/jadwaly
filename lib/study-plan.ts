@@ -7,6 +7,7 @@ import type {
   Extracurricular,
   Priority,
   Profile,
+  SessionStatus,
   StudyLog,
   StudySession,
   Subject,
@@ -38,6 +39,27 @@ function weekdayOf(date: string): Weekday {
 
 function totalMinutes(sessions: StudySession[]): number {
   return sessions.reduce((sum, s) => sum + s.minutes, 0);
+}
+
+/** Minutes logged for a subject from Monday up to the day before today (within the week) */
+function pastLoggedMinutes(
+  studyLogs: StudyLog[],
+  subjectId: string,
+  weekStart: string,
+  weekEnd: string,
+  today: string
+): number {
+  return studyLogs
+    .filter(
+      (l) => l.subject_id === subjectId && l.date >= weekStart && l.date <= weekEnd && l.date < today
+    )
+    .reduce((sum, l) => sum + l.minutes, 0);
+}
+
+/** Monday of the week containing `date` */
+export function weekStartOf(date: string): string {
+  const weekday = weekdayOf(date);
+  return shiftDate(date, weekday === 0 ? -6 : 1 - weekday);
 }
 
 /**
@@ -94,16 +116,15 @@ export function generateWeek(
   // Sessions waiting for a new day (missed or removed for the cap).
   const toPlace: UnscheduledSession[] = [];
 
-  // 3. Missed sessions. Logs are matched per subject across the week, not per
-  // day, so minutes logged on any day from Monday to today cover a shortfall on
-  // another (e.g. a carried-over session done later). Missed minutes go back in
-  // chunks of session_minutes, with any remainder as a shorter final chunk.
-  const lastLogDate = today < weekEnd ? today : weekEnd;
+  // 3. Missed sessions. Logs are matched per subject across the past days of
+  // the week, not per day, so extra minutes logged on one day cover a
+  // shortfall on another (e.g. a carried-over session done later). Today's
+  // logs are left out: they mark today's sessions done (sessionStatuses), and
+  // counting them here too would use the same minutes twice. Missed minutes go
+  // back in chunks of session_minutes, with any remainder as a shorter final chunk.
   const pastDays = days.filter((d) => d.date < today);
   for (const subject of subjects) {
-    const logged = studyLogs
-      .filter((l) => l.subject_id === subject.id && l.date >= weekStart && l.date <= lastLogDate)
-      .reduce((sum, l) => sum + l.minutes, 0);
+    const logged = pastLoggedMinutes(studyLogs, subject.id, weekStart, weekEnd, today);
 
     let planned = 0;
     let firstShortfall: string | null = null;
@@ -169,6 +190,50 @@ export function generateWeek(
   }
 
   return { days, couldNotFit };
+}
+
+/**
+ * Done or missed status for every session in a plan, in the same shape as
+ * plan.days[i].sessions. For each subject, logged minutes fill its sessions in
+ * order; a session is done when the remaining minutes cover it (a session that
+ * isn't covered doesn't use them up, so a later, shorter one can still be).
+ * - Past days: logs from Monday to yesterday, pooled across the days (same as generateWeek).
+ * - Today: today's logs. Uncovered sessions are "open".
+ * - Later days: "open".
+ */
+export function sessionStatuses(
+  plan: WeekPlan,
+  today: string,
+  studyLogs: StudyLog[]
+): SessionStatus[][] {
+  const weekStart = plan.days[0].date;
+  const weekEnd = plan.days[plan.days.length - 1].date;
+
+  const pastPool = new Map<string, number>();
+  const todayPool = new Map<string, number>();
+  for (const log of studyLogs) {
+    const pool =
+      log.date === today
+        ? todayPool
+        : log.date >= weekStart && log.date <= weekEnd && log.date < today
+          ? pastPool
+          : null;
+    pool?.set(log.subject_id, (pool.get(log.subject_id) ?? 0) + log.minutes);
+  }
+
+  return plan.days.map((day) => {
+    if (day.date > today) return day.sessions.map(() => "open");
+    const isPast = day.date < today;
+    return day.sessions.map((session) => {
+      const pool = isPast ? pastPool : todayPool;
+      const available = pool.get(session.subjectId) ?? 0;
+      if (available >= session.minutes) {
+        pool.set(session.subjectId, available - session.minutes);
+        return "done";
+      }
+      return isPast ? "missed" : "open";
+    });
+  });
 }
 
 /** Extracurriculars on a given day. Hidden on days with an exam. */

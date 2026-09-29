@@ -109,6 +109,9 @@ export interface StudySession {
   reason: SessionReason;
 }
 
+/** "open": today or later and not done yet */
+export type SessionStatus = "done" | "missed" | "open";
+
 export interface DayPlan {
   /** "YYYY-MM-DD" */
   date: string;

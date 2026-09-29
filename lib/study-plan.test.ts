@@ -3,6 +3,8 @@ import {
   EXAM_PREP_MINUTES,
   extracurricularsForDay,
   generateWeek,
+  sessionStatuses,
+  weekStartOf,
 } from "@/lib/study-plan";
 import type {
   Extracurricular,
@@ -217,6 +219,61 @@ describe("generateWeek", () => {
 
     expect(carriedOver(plan)).toEqual([]);
     expect(plan.couldNotFit).toEqual([]);
+  });
+});
+
+describe("sessionStatuses", () => {
+  it("marks past sessions done or missed, pooling logs across past days", () => {
+    // Today is Thursday. 180 minutes of Math logged Tuesday cover Monday and
+    // Tuesday; nothing covers Wednesday.
+    const math = subject("math", 90, EVERY_DAY, "High");
+    const logs = [log("math", TUE, 180)];
+    const plan = generateWeek(MON, THU, profile(240), [math], [], logs);
+
+    const statuses = sessionStatuses(plan, THU, logs);
+
+    expect(statuses[0]).toEqual(["done"]); // Mon
+    expect(statuses[1]).toEqual(["done"]); // Tue
+    expect(statuses[2]).toEqual(["missed"]); // Wed
+    expect(statuses[3]).toEqual(["open", "open"]); // Thu: regular + Wednesday carried over
+    expect(statuses[4]).toEqual(["open"]); // Fri
+  });
+
+  it("fills today's sessions in order, skipping one the logged minutes can't cover", () => {
+    // Today is Thursday, the day before a Chemistry exam: a 90-minute regular
+    // session and a 60-minute prep session. 60 minutes logged today cover only
+    // the prep. Tuesday's and Wednesday's prep were done, so nothing carries over.
+    const chem = subject("chem", 90, [4], "Medium");
+    const pastLogs = [log("chem", TUE, 60), log("chem", WED, 60)];
+    const plan = generateWeek(MON, THU, profile(240), [chem], [exam("chem", FRI)], pastLogs);
+    expect(sessionsOn(plan, THU)).toEqual(["chem:90:regular", "chem:60:exam prep"]);
+
+    const doneSixty = [...pastLogs, log("chem", THU, 60)];
+    const doneAll = [...pastLogs, log("chem", THU, 150)];
+    expect(sessionStatuses(plan, THU, doneSixty)[3]).toEqual(["open", "done"]);
+    expect(sessionStatuses(plan, THU, doneAll)[3]).toEqual(["done", "done"]);
+  });
+
+  it("keeps a carried-over session on today's plan after today's minutes are logged", () => {
+    // Math missed Tuesday, so today (Wednesday) has a carried-over session.
+    // Marking 90 minutes done today must not also cancel the carry-over:
+    // today's logs only count toward today's sessions.
+    const math = subject("math", 90, EVERY_DAY, "High");
+    const logs = [log("math", MON, 90), log("math", WED, 90)];
+
+    const plan = generateWeek(MON, WED, profile(240), [math], [], logs);
+
+    expect(sessionsOn(plan, WED)).toEqual(["math:90:regular", "math:90:carried over"]);
+    expect(sessionStatuses(plan, WED, logs)[2]).toEqual(["done", "open"]);
+  });
+});
+
+describe("weekStartOf", () => {
+  it("returns the Monday of the week", () => {
+    expect(weekStartOf(MON)).toBe(MON);
+    expect(weekStartOf(THU)).toBe(MON);
+    expect(weekStartOf(SUN)).toBe(MON);
+    expect(weekStartOf("2026-10-05")).toBe("2026-10-05");
   });
 });
 

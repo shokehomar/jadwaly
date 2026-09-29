@@ -2,6 +2,7 @@
 
 import {
   BookOpen,
+  CalendarDays,
   GraduationCap,
   HeartHandshake,
   LayoutDashboard,
@@ -56,6 +57,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, diplomaOnly: false },
+  { label: "Schedule", href: "/schedule", icon: CalendarDays, diplomaOnly: false },
   { label: "Subjects", href: "/subjects", icon: BookOpen, diplomaOnly: false },
   { label: "EE", href: "/ee", icon: PenLine, diplomaOnly: true },
   { label: "TOK", href: "/tok", icon: Lightbulb, diplomaOnly: true },
