@@ -31,6 +31,8 @@ export interface Profile {
   onboarding_complete: boolean;
   /** Most study minutes the scheduler may plan in one day (default 240) */
   daily_cap_minutes: number;
+  /** The student's weekend (default [5, 6], Friday and Saturday). Used by the "Weekends" preset and label */
+  weekend_days: Weekday[];
 }
 
 export interface Subject {

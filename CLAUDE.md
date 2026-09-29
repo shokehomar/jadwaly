@@ -44,6 +44,7 @@ subjects
 - Onboarding offers frequency presets (every day, every other day, weekends, custom) that all save as study_days.
 
 profiles also has daily_cap_minutes (int, default 240).
+profiles also has weekend_days (array of 0 to 6, default [5, 6] for Friday and Saturday). For now every student gets Friday and Saturday (production targets Jordan) and onboarding does not ask; a way to change it may come later. The "Weekends" preset and label always use the student's weekend_days, never hardcoded days.
 
 tasks
 - id, user_id, subject_id (optional), title, type (IA, EE, TOK, CAS, Exam, University, Study), due_date, status (Not started, In progress, Completed), priority (Low, Medium, High), notes (optional)

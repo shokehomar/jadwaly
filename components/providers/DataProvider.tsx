@@ -29,6 +29,12 @@ export type NewTask = Omit<Task, "id" | "user_id">;
 export type NewExtracurricular = Omit<Extracurricular, "id" | "user_id">;
 export type NewStudyLog = Omit<StudyLog, "id" | "user_id">;
 
+export interface OnboardingResult {
+  profile: Omit<Profile, "id" | "onboarding_complete">;
+  subjects: NewSubject[];
+  extracurriculars: NewExtracurricular[];
+}
+
 interface DataContextValue {
   profile: Profile;
   subjects: Subject[];
@@ -55,6 +61,13 @@ interface DataContextValue {
   /** Mark a study session done */
   addStudyLog: (log: NewStudyLog) => StudyLog;
   deleteStudyLog: (id: string) => void;
+
+  /**
+   * Replace the profile, subjects, and extracurriculars with what onboarding
+   * collected, and clear tasks, assessments, and study logs (they belonged to
+   * the old subjects). Marks onboarding complete.
+   */
+  completeOnboarding: (result: OnboardingResult) => void;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -161,6 +174,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const completeOnboarding = useCallback(
+    (result: OnboardingResult) => {
+      const userId = profile.id;
+      setProfile({ ...result.profile, id: userId, onboarding_complete: true });
+      setSubjects(
+        result.subjects.map((s) => ({ ...s, id: crypto.randomUUID(), user_id: userId }))
+      );
+      setExtracurriculars(
+        result.extracurriculars.map((e) => ({ ...e, id: crypto.randomUUID(), user_id: userId }))
+      );
+      setTasks([]);
+      setAssessments([]);
+      setStudyLogs([]);
+    },
+    [profile.id]
+  );
+
   const value = useMemo<DataContextValue>(
     () => ({
       profile,
@@ -181,6 +211,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       deleteExtracurricular,
       addStudyLog,
       deleteStudyLog,
+      completeOnboarding,
     }),
     [
       profile,
@@ -201,6 +232,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       deleteExtracurricular,
       addStudyLog,
       deleteStudyLog,
+      completeOnboarding,
     ]
   );
 

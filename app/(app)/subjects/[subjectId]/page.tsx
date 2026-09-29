@@ -19,7 +19,7 @@ import { byDueDate, cn, describeStudyDays, formatMinutes } from "@/lib/utils";
 
 export default function SubjectPage() {
   const { subjectId } = useParams<{ subjectId: string }>();
-  const { subjects, tasks, assessments } = useData();
+  const { profile, subjects, tasks, assessments } = useData();
 
   const subject = subjects.find((s) => s.id === subjectId);
 
@@ -78,7 +78,7 @@ export default function SubjectPage() {
                 <p className="text-sm text-muted-foreground">Study plan</p>
                 <p className="text-lg font-semibold">
                   {subject.session_minutes} min ·{" "}
-                  {describeStudyDays(subject.study_days)}
+                  {describeStudyDays(subject.study_days, profile.weekend_days)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {formatMinutes(subject.session_minutes * subject.study_days.length)} a week

@@ -1,8 +1,8 @@
 // Mock data for Phase 1 (UI only). Shaped exactly like the future database rows,
 // so components can later read from Supabase instead without changes.
 // One diploma student in DP2 (exams May 2027), 6 subjects, and a mix of tasks.
-// Saturdays and Sundays plan 270 study minutes, over the 240-minute daily cap,
-// so the scheduler's cap rule has something to do.
+// Haya's weekend is Friday and Saturday. Both plan 270 study minutes, over the
+// 240-minute daily cap, so the scheduler's cap rule has something to do.
 
 import type {
   Assessment,
@@ -22,6 +22,7 @@ export const mockProfile: Profile = {
   diploma: true,
   onboarding_complete: true,
   daily_cap_minutes: 240,
+  weekend_days: [5, 6],
 };
 
 export const mockSubjects: Subject[] = [
@@ -77,7 +78,7 @@ export const mockSubjects: Subject[] = [
     color: "#C2649A",
     predicted_grade: 7,
     session_minutes: 60,
-    study_days: [0, 6],
+    study_days: [5, 6],
     priority: "Low",
   },
   {
@@ -88,7 +89,7 @@ export const mockSubjects: Subject[] = [
     color: "#9B6BC8",
     predicted_grade: 6,
     session_minutes: 60,
-    study_days: [0, 6],
+    study_days: [5, 6],
     priority: "Low",
   },
 ];
@@ -430,5 +431,5 @@ export const mockStudyLogs: StudyLog[] = [
   { id: "log_09", user_id: USER_ID, subject_id: "sub_math", date: "2026-09-26", minutes: 60 },
   { id: "log_10", user_id: USER_ID, subject_id: "sub_arabic", date: "2026-09-26", minutes: 60 },
   { id: "log_11", user_id: USER_ID, subject_id: "sub_math", date: "2026-09-27", minutes: 90 },
-  { id: "log_12", user_id: USER_ID, subject_id: "sub_english", date: "2026-09-27", minutes: 60 },
+  { id: "log_12", user_id: USER_ID, subject_id: "sub_english", date: "2026-09-25", minutes: 60 },
 ];

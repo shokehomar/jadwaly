@@ -22,7 +22,7 @@ export function Sidebar() {
     <>
       {/* Desktop and tablet */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
-        <div className="sticky top-0 flex flex-col gap-8 px-4 py-6">
+        <div className="sticky top-0 flex h-screen flex-col gap-8 px-4 py-6">
           <Link href="/dashboard" className="px-3 text-xl font-bold text-primary">
             jadwaly
           </Link>
@@ -44,6 +44,13 @@ export function Sidebar() {
               </Link>
             ))}
           </nav>
+          {/* Temporary, for testing onboarding */}
+          <Link
+            href="/onboarding"
+            className="mt-auto px-3 text-xs text-muted-foreground hover:text-foreground hover:underline"
+          >
+            Redo onboarding
+          </Link>
         </div>
       </aside>
 

@@ -1,12 +1,19 @@
 // Card: subject name, HL/SL, predicted grade, study plan (session length, days, priority), link to detail page.
+// Days read "Weekends" when they match the student's weekend_days.
 // Used by: app/(app)/subjects/page.tsx
 
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { describeStudyDays } from "@/lib/utils";
-import type { Subject } from "@/types";
+import type { Subject, Weekday } from "@/types";
 
-export function SubjectCard({ subject }: { subject: Subject }) {
+interface SubjectCardProps {
+  subject: Subject;
+  /** The student's weekend_days, for the "Weekends" label */
+  weekendDays: Weekday[];
+}
+
+export function SubjectCard({ subject, weekendDays }: SubjectCardProps) {
   return (
     <Link
       href={`/subjects/${subject.id}`}
@@ -26,7 +33,7 @@ export function SubjectCard({ subject }: { subject: Subject }) {
         <div className="flex flex-col items-end gap-1.5 text-right">
           <Badge variant="secondary">{subject.priority} priority</Badge>
           <p className="text-xs text-muted-foreground">
-            {subject.session_minutes} min · {describeStudyDays(subject.study_days)}
+            {subject.session_minutes} min · {describeStudyDays(subject.study_days, weekendDays)}
           </p>
         </div>
       </div>

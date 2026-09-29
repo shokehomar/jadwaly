@@ -53,12 +53,18 @@ export function formatMinutes(minutes: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`
 }
 
-/** Study days as text: "Every day", "Weekends", or "Mon, Wed, Fri" (Monday first) */
-export function describeStudyDays(days: Weekday[]): string {
+/**
+ * Study days as text: "Every day", "Weekends" (when they match the student's
+ * weekend_days), or "Mon, Wed, Fri" (Monday first)
+ */
+export function describeStudyDays(days: Weekday[], weekendDays: Weekday[]): string {
   const unique = new Set(days)
+  const weekend = new Set(weekendDays)
   if (unique.size === 0) return "No study days"
   if (unique.size === 7) return "Every day"
-  if (unique.size === 2 && unique.has(0) && unique.has(6)) return "Weekends"
+  if (weekend.size > 0 && unique.size === weekend.size && [...weekend].every((d) => unique.has(d))) {
+    return "Weekends"
+  }
   return WEEK_ORDER.filter((d) => unique.has(d))
     .map((d) => WEEKDAYS[d].short)
     .join(", ")

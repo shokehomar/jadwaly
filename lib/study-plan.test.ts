@@ -36,6 +36,7 @@ function profile(dailyCap: number): Profile {
     diploma: true,
     onboarding_complete: true,
     daily_cap_minutes: dailyCap,
+    weekend_days: [5, 6],
   };
 }
 

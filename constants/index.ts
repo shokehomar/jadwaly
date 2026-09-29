@@ -33,6 +33,82 @@ export const STATUSES = [
 
 export const PRIORITIES = ["Low", "Medium", "High"] as const satisfies readonly Priority[];
 
+/** Distinct subject colors, assigned in order during onboarding */
+export const SUBJECT_COLORS = [
+  "#2BA5A0", // teal
+  "#4A7FD4", // blue
+  "#D9534F", // red
+  "#E0A030", // amber
+  "#C2649A", // pink
+  "#9B6BC8", // purple
+  "#62AD59", // green
+  "#E0743A", // orange
+  "#8C6A4F", // brown
+  "#6B7A8F", // slate
+];
+
+/** Common IB Diploma subjects by group, used as name suggestions in onboarding */
+export const IB_SUBJECTS: { group: string; subjects: string[] }[] = [
+  {
+    group: "Studies in language and literature",
+    subjects: [
+      "English A: Language and Literature",
+      "English A: Literature",
+      "Arabic A: Language and Literature",
+      "Arabic A: Literature",
+    ],
+  },
+  {
+    group: "Language acquisition",
+    subjects: [
+      "English B",
+      "Arabic B",
+      "French B",
+      "Spanish B",
+      "German B",
+      "Mandarin B",
+      "French ab initio",
+      "Spanish ab initio",
+    ],
+  },
+  {
+    group: "Individuals and societies",
+    subjects: [
+      "Economics",
+      "Business Management",
+      "Psychology",
+      "History",
+      "Geography",
+      "Global Politics",
+      "Philosophy",
+      "Digital Society",
+    ],
+  },
+  {
+    group: "Sciences",
+    subjects: [
+      "Biology",
+      "Chemistry",
+      "Physics",
+      "Computer Science",
+      "Design Technology",
+      "Sports, Exercise and Health Science",
+      "Environmental Systems and Societies",
+    ],
+  },
+  {
+    group: "Mathematics",
+    subjects: [
+      "Mathematics: Analysis and Approaches",
+      "Mathematics: Applications and Interpretation",
+    ],
+  },
+  {
+    group: "The arts",
+    subjects: ["Visual Arts", "Music", "Theatre", "Film"],
+  },
+];
+
 /** Indexed by Weekday (0 = Sunday), matching study_days */
 export const WEEKDAYS: { value: Weekday; short: string; long: string }[] = [
   { value: 0, short: "Sun", long: "Sunday" },
@@ -43,6 +119,12 @@ export const WEEKDAYS: { value: Weekday; short: string; long: string }[] = [
   { value: 5, short: "Fri", long: "Friday" },
   { value: 6, short: "Sat", long: "Saturday" },
 ];
+
+/**
+ * Every student's weekend_days for now: Friday and Saturday (the app launches in
+ * Jordan). There is no way to change it yet.
+ */
+export const DEFAULT_WEEKEND_DAYS: Weekday[] = [5, 6];
 
 /** Display order for weekdays: Monday first, like the calendar */
 export const WEEK_ORDER: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
