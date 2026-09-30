@@ -192,3 +192,107 @@ create policy "Users manage their own study logs" on public.study_logs
   with check ((select auth.jwt()->>'sub') = user_id);
 
 commit;
+
+
+-- ===========================================================================
+-- save_onboarding: separate block, safe to run on its own (and to re-run;
+-- "create or replace" updates the function in place).
+--
+-- Saves everything onboarding collected in one transaction. On a redo it
+-- replaces the old account data:
+--   profile           -> inserted, or updated if it exists; onboarding_complete = true
+--   tasks             -> all deleted
+--   subjects          -> all deleted (their assessments and study logs go with them)
+--   extracurriculars  -> all deleted
+--   then the new subjects and extracurriculars are inserted.
+-- If any step fails (e.g. a value breaks a check), nothing is changed.
+--
+-- security invoker: runs as the calling user, so row level security applies to
+-- every statement, the same as the app's own queries. The explicit user_id
+-- filters below only repeat what RLS already enforces.
+-- search_path is empty, so every name is schema-qualified.
+--
+-- payload shape (built by toOnboardingPayload in components/onboarding/schema.ts):
+-- {
+--   "profile": { "name", "graduation_year", "diploma", "daily_cap_minutes", "weekend_days": [5, 6] },
+--   "subjects": [{ "name", "level", "color", "session_minutes", "study_days": [1, 3], "priority" }],
+--   "extracurriculars": [{ "name", "days": [1], "start_time": "18:00", "duration_minutes" }]
+-- }
+-- ===========================================================================
+
+begin;
+
+create or replace function public.save_onboarding(payload jsonb)
+returns void
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  uid text := auth.jwt()->>'sub';
+  p jsonb := payload->'profile';
+begin
+  if uid is null then
+    raise exception 'save_onboarding: not signed in';
+  end if;
+
+  insert into public.profiles
+    (id, name, graduation_year, diploma, onboarding_complete, daily_cap_minutes, weekend_days)
+  values (
+    uid,
+    p->>'name',
+    (p->>'graduation_year')::integer,
+    (p->>'diploma')::boolean,
+    true,
+    (p->>'daily_cap_minutes')::integer,
+    array(select jsonb_array_elements_text(p->'weekend_days')::smallint)
+  )
+  on conflict (id) do update set
+    name = excluded.name,
+    graduation_year = excluded.graduation_year,
+    diploma = excluded.diploma,
+    onboarding_complete = true,
+    daily_cap_minutes = excluded.daily_cap_minutes,
+    weekend_days = excluded.weekend_days;
+
+  -- Tasks first: deleting subjects would otherwise only clear their subject_id.
+  delete from public.tasks where user_id = uid;
+  delete from public.subjects where user_id = uid;
+  delete from public.extracurriculars where user_id = uid;
+
+  -- created_at steps by a microsecond per row: everything in this transaction
+  -- shares now(), and the app lists subjects and extracurriculars by created_at,
+  -- so this keeps the order they were entered in.
+  insert into public.subjects
+    (user_id, name, level, color, session_minutes, study_days, priority, created_at)
+  select
+    uid,
+    s->>'name',
+    s->>'level',
+    s->>'color',
+    (s->>'session_minutes')::integer,
+    array(select jsonb_array_elements_text(s->'study_days')::smallint),
+    s->>'priority',
+    now() + n * interval '1 microsecond'
+  from jsonb_array_elements(coalesce(payload->'subjects', '[]'::jsonb)) with ordinality as t(s, n)
+  order by n;
+
+  insert into public.extracurriculars
+    (user_id, name, days, start_time, duration_minutes, created_at)
+  select
+    uid,
+    e->>'name',
+    array(select jsonb_array_elements_text(e->'days')::smallint),
+    e->>'start_time',
+    (e->>'duration_minutes')::integer,
+    now() + n * interval '1 microsecond'
+  from jsonb_array_elements(coalesce(payload->'extracurriculars', '[]'::jsonb)) with ordinality as t(e, n)
+  order by n;
+end;
+$$;
+
+-- Only signed-in users may call it (functions are executable by everyone by default).
+revoke execute on function public.save_onboarding(jsonb) from public, anon;
+grant execute on function public.save_onboarding(jsonb) to authenticated;
+
+commit;

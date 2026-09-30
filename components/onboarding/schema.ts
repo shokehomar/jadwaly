@@ -177,3 +177,50 @@ export function minutesByWeekday(
   }
   return totals;
 }
+
+/** What public.save_onboarding (supabase/schema.sql) expects */
+export interface OnboardingPayload {
+  profile: {
+    name: string;
+    graduation_year: number;
+    diploma: boolean;
+    daily_cap_minutes: number;
+    weekend_days: Weekday[];
+  };
+  subjects: {
+    name: string;
+    level: "HL" | "SL";
+    color: string;
+    session_minutes: number;
+    study_days: Weekday[];
+    priority: OnboardingSubject["priority"];
+  }[];
+  extracurriculars: OnboardingExtracurricular[];
+}
+
+/** Form values -> save_onboarding payload (drops the form-only preset field) */
+export function toOnboardingPayload(values: OnboardingValues): OnboardingPayload {
+  return {
+    profile: {
+      name: values.name,
+      graduation_year: values.graduation_year,
+      diploma: values.diploma,
+      daily_cap_minutes: values.daily_cap_minutes,
+      weekend_days: values.weekend_days,
+    },
+    subjects: values.subjects.map((s) => ({
+      name: s.name,
+      level: s.level,
+      color: s.color,
+      session_minutes: s.session_minutes,
+      study_days: s.study_days,
+      priority: s.priority,
+    })),
+    extracurriculars: values.extracurriculars.map((e) => ({
+      name: e.name,
+      days: e.days,
+      start_time: e.start_time,
+      duration_minutes: e.duration_minutes,
+    })),
+  };
+}

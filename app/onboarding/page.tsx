@@ -3,8 +3,8 @@
 // Multi-step onboarding: about you > subjects (name, HL/SL, color) > study plan per subject >
 // extracurriculars > daily study limit > review. One react-hook-form + zod form; Next checks
 // only the current step, and nothing saves until Finish.
-// Imports: @/components/onboarding/*. Next: @/lib/actions/onboarding.actions (saveOnboarding),
-// then redirect to /dashboard on finish.
+// Imports: @/components/onboarding/*, @/lib/actions/onboarding.actions (saveOnboarding),
+// which saves everything and redirects to /dashboard.
 
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,12 +23,13 @@ import {
 import { StudyPlanForm } from "@/components/onboarding/StudyPlanForm";
 import { SubjectPicker } from "@/components/onboarding/SubjectPicker";
 import { DEFAULT_WEEKEND_DAYS } from "@/constants";
+import { saveOnboarding } from "@/lib/actions/onboarding.actions";
 
 const TITLES = STEPS.map((s) => s.title);
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
-  const [saveUnavailable, setSaveUnavailable] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const form = useForm<OnboardingValues>({
     resolver: zodResolver(onboardingSchema),
@@ -47,10 +48,11 @@ export default function OnboardingPage() {
     window.scrollTo({ top: 0 });
   }
 
-  // Saving arrives with saveOnboarding (Supabase phase 2). Until then Finish only
-  // says so, since the dashboard needs a saved profile.
-  function finish() {
-    setSaveUnavailable(true);
+  // On success saveOnboarding redirects to /dashboard, so it only returns on failure.
+  async function finish(values: OnboardingValues) {
+    setSaveError(null);
+    const result = await saveOnboarding(values);
+    setSaveError(result?.error ?? null);
   }
 
   // Shouldn't happen (each step is checked on Next), but if it does, go to
@@ -72,10 +74,9 @@ export default function OnboardingPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8 pb-16 md:py-12">
       <p className="mb-8 text-xl font-bold text-primary">jadwaly</p>
-      {saveUnavailable && (
-        <p role="alert" className="mb-6 rounded-lg bg-accent px-4 py-3 text-sm text-accent-foreground">
-          Saving onboarding isn&apos;t connected yet. Your answers are fine; they&apos;ll be saved
-          once this step is built.
+      {saveError && (
+        <p role="alert" className="mb-6 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {saveError}
         </p>
       )}
       <FormProvider {...form}>
@@ -85,6 +86,7 @@ export default function OnboardingPage() {
             titles={TITLES}
             onBack={() => goTo(step - 1)}
             onNext={next}
+            busy={form.formState.isSubmitting}
           >
             {step === 0 && <AboutYouStep />}
             {step === 1 && <SubjectPicker />}

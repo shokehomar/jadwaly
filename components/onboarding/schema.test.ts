@@ -7,6 +7,7 @@ import {
   presetDays,
   staggerIndexFor,
   subjectCountError,
+  toOnboardingPayload,
   type OnboardingSubject,
   type OnboardingValues,
 } from "@/components/onboarding/schema";
@@ -110,5 +111,32 @@ describe("helpers", () => {
       { session_minutes: 60, study_days: [] },
     ]);
     expect(totals).toEqual({ 0: 150, 1: 90, 2: 90, 3: 90, 4: 90, 5: 90, 6: 150 });
+  });
+});
+
+describe("toOnboardingPayload", () => {
+  it("keeps what save_onboarding needs and drops the form-only preset", () => {
+    const list = subjects(["HL", "SL"]);
+    const gym = { name: "Gym", days: [5, 6] as Weekday[], start_time: "18:00", duration_minutes: 60 };
+    const payload = toOnboardingPayload(values({ subjects: list, diploma: false, extracurriculars: [gym] }));
+
+    expect(payload.profile).toEqual({
+      name: "Haya",
+      graduation_year: 2027,
+      diploma: false,
+      daily_cap_minutes: 240,
+      weekend_days: [5, 6],
+    });
+    expect(payload.subjects).toHaveLength(2);
+    expect(payload.subjects[0]).not.toHaveProperty("preset");
+    expect(payload.subjects[0]).toEqual({
+      name: "Subject 1",
+      level: "HL",
+      color: list[0].color,
+      session_minutes: 60,
+      study_days: [1, 3, 5, 0],
+      priority: "Medium",
+    });
+    expect(payload.extracurriculars).toEqual([gym]);
   });
 });

@@ -9,10 +9,19 @@ interface OnboardingStepsProps {
   titles: readonly string[];
   onBack: () => void;
   onNext: () => void;
+  /** Saving: disables the buttons and shows "Saving…" */
+  busy?: boolean;
   children: React.ReactNode;
 }
 
-export function OnboardingSteps({ step, titles, onBack, onNext, children }: OnboardingStepsProps) {
+export function OnboardingSteps({
+  step,
+  titles,
+  onBack,
+  onNext,
+  busy = false,
+  children,
+}: OnboardingStepsProps) {
   const isLast = step === titles.length - 1;
 
   return (
@@ -33,14 +42,14 @@ export function OnboardingSteps({ step, titles, onBack, onNext, children }: Onbo
 
       <div className="flex items-center justify-between gap-3 border-t pt-4">
         {step > 0 ? (
-          <Button type="button" variant="outline" size="lg" onClick={onBack}>
+          <Button type="button" variant="outline" size="lg" onClick={onBack} disabled={busy}>
             Back
           </Button>
         ) : (
           <span />
         )}
-        <Button type="button" size="lg" onClick={onNext}>
-          {isLast ? "Finish" : "Next"}
+        <Button type="button" size="lg" onClick={onNext} disabled={busy}>
+          {busy ? "Saving…" : isLast ? "Finish" : "Next"}
         </Button>
       </div>
     </div>
