@@ -1,10 +1,10 @@
 "use client";
 
-// Client-side data store for the whole app. Pages and components read and write
-// data only through useData(), never from constants/mock-data directly.
-// Phase 1: state starts from mock data and lives in memory (resets on reload).
-// Later: swap the initial load and update functions for Supabase calls; the
-// useData() shape stays the same so the UI does not change.
+// Client-side data store for the signed-in pages. Pages and components read and write
+// data only through useData().
+// State starts from the user's Supabase data, loaded on the server by app/(app)/layout
+// (lib/user-data.ts) and passed in as initialData. Writes still only change this
+// in-memory state until they move to server actions (lib/actions); they are lost on reload.
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type {
@@ -15,25 +15,12 @@ import type {
   Subject,
   Task,
 } from "@/types";
-import {
-  mockAssessments,
-  mockExtracurriculars,
-  mockProfile,
-  mockStudyLogs,
-  mockSubjects,
-  mockTasks,
-} from "@/constants/mock-data";
+import type { UserData } from "@/lib/user-data";
 
 export type NewSubject = Omit<Subject, "id" | "user_id">;
 export type NewTask = Omit<Task, "id" | "user_id">;
 export type NewExtracurricular = Omit<Extracurricular, "id" | "user_id">;
 export type NewStudyLog = Omit<StudyLog, "id" | "user_id">;
-
-export interface OnboardingResult {
-  profile: Omit<Profile, "id" | "onboarding_complete">;
-  subjects: NewSubject[];
-  extracurriculars: NewExtracurricular[];
-}
 
 interface DataContextValue {
   profile: Profile;
@@ -61,25 +48,24 @@ interface DataContextValue {
   /** Mark a study session done */
   addStudyLog: (log: NewStudyLog) => StudyLog;
   deleteStudyLog: (id: string) => void;
-
-  /**
-   * Replace the profile, subjects, and extracurriculars with what onboarding
-   * collected, and clear tasks, assessments, and study logs (they belonged to
-   * the old subjects). Marks onboarding complete.
-   */
-  completeOnboarding: (result: OnboardingResult) => void;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
 
-export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [profile, setProfile] = useState<Profile>(mockProfile);
-  const [subjects, setSubjects] = useState<Subject[]>(mockSubjects);
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
-  const [assessments, setAssessments] = useState<Assessment[]>(mockAssessments);
-  const [extracurriculars, setExtracurriculars] =
-    useState<Extracurricular[]>(mockExtracurriculars);
-  const [studyLogs, setStudyLogs] = useState<StudyLog[]>(mockStudyLogs);
+interface DataProviderProps {
+  initialData: UserData;
+  children: React.ReactNode;
+}
+
+export function DataProvider({ initialData, children }: DataProviderProps) {
+  const [profile, setProfile] = useState<Profile>(initialData.profile);
+  const [subjects, setSubjects] = useState<Subject[]>(initialData.subjects);
+  const [tasks, setTasks] = useState<Task[]>(initialData.tasks);
+  const [assessments, setAssessments] = useState<Assessment[]>(initialData.assessments);
+  const [extracurriculars, setExtracurriculars] = useState<Extracurricular[]>(
+    initialData.extracurriculars
+  );
+  const [studyLogs, setStudyLogs] = useState<StudyLog[]>(initialData.studyLogs);
 
   const updateProfile = useCallback(
     (changes: Partial<Omit<Profile, "id">>) =>
@@ -174,23 +160,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const completeOnboarding = useCallback(
-    (result: OnboardingResult) => {
-      const userId = profile.id;
-      setProfile({ ...result.profile, id: userId, onboarding_complete: true });
-      setSubjects(
-        result.subjects.map((s) => ({ ...s, id: crypto.randomUUID(), user_id: userId }))
-      );
-      setExtracurriculars(
-        result.extracurriculars.map((e) => ({ ...e, id: crypto.randomUUID(), user_id: userId }))
-      );
-      setTasks([]);
-      setAssessments([]);
-      setStudyLogs([]);
-    },
-    [profile.id]
-  );
-
   const value = useMemo<DataContextValue>(
     () => ({
       profile,
@@ -211,7 +180,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       deleteExtracurricular,
       addStudyLog,
       deleteStudyLog,
-      completeOnboarding,
     }),
     [
       profile,
@@ -232,7 +200,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       deleteExtracurricular,
       addStudyLog,
       deleteStudyLog,
-      completeOnboarding,
     ]
   );
 

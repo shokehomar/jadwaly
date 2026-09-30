@@ -3,11 +3,10 @@
 // Multi-step onboarding: about you > subjects (name, HL/SL, color) > study plan per subject >
 // extracurriculars > daily study limit > review. One react-hook-form + zod form; Next checks
 // only the current step, and nothing saves until Finish.
-// Imports: @/components/onboarding/*, @/components/providers/DataProvider (completeOnboarding).
-// Later: @/lib/actions/onboarding.actions (saveOnboarding). Redirects to /dashboard on finish.
+// Imports: @/components/onboarding/*. Next: @/lib/actions/onboarding.actions (saveOnboarding),
+// then redirect to /dashboard on finish.
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm, type FieldErrors } from "react-hook-form";
 import { AboutYouStep } from "@/components/onboarding/AboutYouStep";
@@ -23,15 +22,13 @@ import {
 } from "@/components/onboarding/schema";
 import { StudyPlanForm } from "@/components/onboarding/StudyPlanForm";
 import { SubjectPicker } from "@/components/onboarding/SubjectPicker";
-import { useData } from "@/components/providers/DataProvider";
 import { DEFAULT_WEEKEND_DAYS } from "@/constants";
 
 const TITLES = STEPS.map((s) => s.title);
 
 export default function OnboardingPage() {
-  const router = useRouter();
-  const { completeOnboarding } = useData();
   const [step, setStep] = useState(0);
+  const [saveUnavailable, setSaveUnavailable] = useState(false);
 
   const form = useForm<OnboardingValues>({
     resolver: zodResolver(onboardingSchema),
@@ -50,27 +47,10 @@ export default function OnboardingPage() {
     window.scrollTo({ top: 0 });
   }
 
-  function finish(values: OnboardingValues) {
-    completeOnboarding({
-      profile: {
-        name: values.name,
-        graduation_year: values.graduation_year,
-        diploma: values.diploma,
-        daily_cap_minutes: values.daily_cap_minutes,
-        weekend_days: values.weekend_days,
-      },
-      subjects: values.subjects.map((s) => ({
-        name: s.name,
-        level: s.level,
-        color: s.color,
-        predicted_grade: null,
-        session_minutes: s.session_minutes,
-        study_days: s.study_days,
-        priority: s.priority,
-      })),
-      extracurriculars: values.extracurriculars,
-    });
-    router.push("/dashboard");
+  // Saving arrives with saveOnboarding (Supabase phase 2). Until then Finish only
+  // says so, since the dashboard needs a saved profile.
+  function finish() {
+    setSaveUnavailable(true);
   }
 
   // Shouldn't happen (each step is checked on Next), but if it does, go to
@@ -92,6 +72,12 @@ export default function OnboardingPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8 pb-16 md:py-12">
       <p className="mb-8 text-xl font-bold text-primary">jadwaly</p>
+      {saveUnavailable && (
+        <p role="alert" className="mb-6 rounded-lg bg-accent px-4 py-3 text-sm text-accent-foreground">
+          Saving onboarding isn&apos;t connected yet. Your answers are fine; they&apos;ll be saved
+          once this step is built.
+        </p>
+      )}
       <FormProvider {...form}>
         <form onSubmit={(e) => e.preventDefault()} noValidate>
           <OnboardingSteps

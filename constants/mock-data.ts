@@ -1,5 +1,5 @@
-// Mock data for Phase 1 (UI only). Shaped exactly like the future database rows,
-// so components can later read from Supabase instead without changes.
+// Mock data for tests only; the app loads real data from Supabase (lib/user-data.ts).
+// Shaped exactly like the database rows.
 // One diploma student in DP2 (exams May 2027), 6 subjects, and a mix of tasks.
 // Haya's weekend is Friday and Saturday. Both plan 270 study minutes, over the
 // 240-minute daily cap, so the scheduler's cap rule has something to do.

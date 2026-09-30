@@ -6,6 +6,12 @@ import {
   sessionStatuses,
   weekStartOf,
 } from "@/lib/study-plan";
+import {
+  mockProfile,
+  mockStudyLogs,
+  mockSubjects,
+  mockTasks,
+} from "@/constants/mock-data";
 import type {
   Extracurricular,
   Priority,
@@ -220,6 +226,29 @@ describe("generateWeek", () => {
 
     expect(carriedOver(plan)).toEqual([]);
     expect(plan.couldNotFit).toEqual([]);
+  });
+});
+
+describe("generateWeek with Haya's mock data", () => {
+  // Today is Tuesday. Nothing is logged this week, so Monday's sessions are missed.
+  const plan = generateWeek(MON, TUE, mockProfile, mockSubjects, mockTasks, mockStudyLogs);
+
+  it("keeps every day from today onward within her daily cap", () => {
+    for (const date of WEEK.slice(1)) {
+      expect(dayTotal(plan, date)).toBeLessThanOrEqual(mockProfile.daily_cap_minutes);
+    }
+  });
+
+  it("places or lists every minute: the week's plan plus Monday's missed sessions", () => {
+    const regular = mockSubjects.reduce((sum, s) => sum + s.session_minutes * s.study_days.length, 0);
+    const prep = plan.days
+      .flatMap((d) => d.sessions)
+      .filter((s) => s.reason === "exam prep")
+      .reduce((sum, s) => sum + s.minutes, 0);
+    const placed = WEEK.reduce((sum, date) => sum + dayTotal(plan, date), 0);
+    const unplaced = plan.couldNotFit.reduce((sum, s) => sum + s.minutes, 0);
+
+    expect(placed + unplaced).toBe(regular + prep + dayTotal(plan, MON));
   });
 });
 
