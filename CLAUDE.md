@@ -29,7 +29,7 @@ Each skeleton file starts with a comment describing its purpose and what it conn
 - `app/onboarding/` onboarding flow (later)
 - `components/` grouped by feature: layout, dashboard, subjects, tasks, onboarding
 - `lib/study-plan.ts` scheduling logic as pure functions, no UI or database code inside
-- `lib/actions/` server actions (later, once the database exists)
+- `lib/actions/` server actions: every write goes through one, called by the data provider
 - `constants/` static data and mock data
 - `types/` shared TypeScript types
 
@@ -95,3 +95,4 @@ Planned but not designed yet: extracurriculars (blocked time the scheduler must 
 ## Known issues (fix before launch)
 - "Today" is computed on the server and in the browser; students in a different time zone from the server may see the wrong day around midnight.
 - Predicted total shows out of 42; EE/TOK core points (0 to 3) aren't stored yet.
+- "Redo onboarding" is a dev-only testing link. Remove it before launch; students change their setup through the Settings page.

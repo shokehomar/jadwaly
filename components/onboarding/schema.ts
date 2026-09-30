@@ -4,6 +4,7 @@
 
 import { z } from "zod";
 import { PRIORITIES, SUBJECT_COLORS } from "@/constants";
+import { weekdaySchema } from "@/lib/validation";
 import type { Weekday } from "@/types";
 
 export const FREQUENCY_PRESETS = ["every day", "every other day", "weekends", "custom"] as const;
@@ -25,15 +26,7 @@ export const EVERY_OTHER_DAY_SETS: [Weekday[], Weekday[]] = [
 export const DEFAULT_SESSION_MINUTES = 60;
 export const DEFAULT_DAILY_CAP_MINUTES = 240;
 
-const weekday = z.union([
-  z.literal(0),
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-  z.literal(6),
-]);
+const weekday = weekdaySchema;
 
 const subjectSchema = z.object({
   name: z.string().trim().min(1, "Enter the subject name").max(80, "Keep the name under 80 characters"),

@@ -2,7 +2,7 @@
 // Loads the user's data from Supabase for the data provider; with no profile row the
 // user hasn't onboarded yet, so they go to /onboarding.
 // Imports: @/lib/user-data, @/components/providers/DataProvider, @/components/layout/*,
-// @/components/tasks/AddTaskButton
+// @/components/tasks/AddTaskButton, @/components/ui/sonner (Toaster)
 
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -10,6 +10,7 @@ import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { DataProvider } from "@/components/providers/DataProvider";
 import { AddTaskButton } from "@/components/tasks/AddTaskButton";
+import { Toaster } from "@/components/ui/sonner";
 import { loadUserData } from "@/lib/user-data";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <AddTaskButton variant="floating" />
         </div>
       </div>
+      {/* Shows "couldn't save" messages from the data provider */}
+      <Toaster theme="light" position="top-center" />
     </DataProvider>
   );
 }
