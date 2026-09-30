@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Lightbulb,
   PenLine,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 import type { Priority, TaskStatus, TaskType, Weekday } from "@/types";
@@ -21,6 +22,9 @@ export const TASK_TYPES = [
   "University",
   "Study",
 ] as const satisfies readonly TaskType[];
+
+/** Task types that must belong to a subject */
+export const TASK_TYPES_NEEDING_SUBJECT: readonly TaskType[] = ["Exam", "IA"];
 
 /** Task types only diploma students see */
 export const DIPLOMA_ONLY_TASK_TYPES: readonly TaskType[] = ["EE", "TOK", "CAS"];
@@ -135,6 +139,8 @@ export interface NavItem {
   icon: LucideIcon;
   /** Only shown to diploma students */
   diplomaOnly: boolean;
+  /** Left out of the phone tab bar (no room); the header links to it on phones instead */
+  sidebarOnly?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -145,4 +151,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "TOK", href: "/tok", icon: Lightbulb, diplomaOnly: true },
   { label: "CAS", href: "/cas", icon: HeartHandshake, diplomaOnly: true },
   { label: "Universities", href: "/universities", icon: GraduationCap, diplomaOnly: false },
+  { label: "Settings", href: "/settings", icon: Settings, diplomaOnly: false, sidebarOnly: true },
 ];

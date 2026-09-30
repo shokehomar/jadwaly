@@ -41,9 +41,13 @@ describe("server action input checks", () => {
     expect(newTaskSchema.safeParse({ ...task, title: "   " }).success).toBe(false);
   });
 
-  it("requires a subject for exams", () => {
-    expect(newTaskSchema.safeParse({ ...task, type: "Exam", subject_id: null }).success).toBe(false);
-    expect(taskChangesSchema.safeParse({ type: "Exam", subject_id: null }).success).toBe(false);
+  it("requires a subject for exams and IAs", () => {
+    for (const type of ["Exam", "IA"]) {
+      expect(newTaskSchema.safeParse({ ...task, type, subject_id: null }).success).toBe(false);
+      expect(taskChangesSchema.safeParse({ type, subject_id: null }).success).toBe(false);
+    }
+    expect(newTaskSchema.safeParse({ ...task, type: "Study", subject_id: null }).success).toBe(true);
+    expect(newTaskSchema.safeParse({ ...task, type: "EE", subject_id: null }).success).toBe(true);
   });
 
   it("accepts partial updates but not empty ones", () => {

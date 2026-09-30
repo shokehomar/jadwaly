@@ -3,7 +3,7 @@
 // Used by: lib/actions/*, components/onboarding/schema
 
 import { z } from "zod";
-import { PRIORITIES, STATUSES, TASK_TYPES } from "@/constants";
+import { PRIORITIES, STATUSES, TASK_TYPES, TASK_TYPES_NEEDING_SUBJECT } from "@/constants";
 
 export const weekdaySchema = z.union([
   z.literal(0),
@@ -31,10 +31,14 @@ const taskFields = {
   notes: z.string().max(1000).nullable(),
 };
 
+const needsSubject = (type: string | undefined) =>
+  type !== undefined && (TASK_TYPES_NEEDING_SUBJECT as readonly string[]).includes(type);
+
+/** Exams and IAs must belong to a subject */
 export const newTaskSchema = z
   .strictObject({ id: idSchema, ...taskFields })
-  .refine((t) => t.type !== "Exam" || t.subject_id !== null, {
-    message: "An exam needs a subject",
+  .refine((t) => !needsSubject(t.type) || t.subject_id !== null, {
+    message: "Exams and IAs need a subject",
     path: ["subject_id"],
   });
 
@@ -42,8 +46,8 @@ export const taskChangesSchema = z
   .strictObject(taskFields)
   .partial()
   .refine(nonEmpty, "No changes")
-  .refine((c) => !(c.type === "Exam" && c.subject_id === null), {
-    message: "An exam needs a subject",
+  .refine((c) => !(needsSubject(c.type) && c.subject_id === null), {
+    message: "Exams and IAs need a subject",
     path: ["subject_id"],
   });
 

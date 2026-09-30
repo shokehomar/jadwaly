@@ -1,7 +1,7 @@
 "use client";
 
 // Left nav: logo + links from NAV_ITEMS; highlights active route.
-// On phones it becomes a bottom tab bar.
+// On phones it becomes a bottom tab bar (without sidebarOnly items like Settings).
 // Imports: @/constants (NAV_ITEMS), next/link, next/navigation (usePathname)
 
 import Link from "next/link";
@@ -56,7 +56,7 @@ export function Sidebar() {
 
       {/* Phones */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-sidebar-border bg-sidebar pb-[env(safe-area-inset-bottom)] md:hidden">
-        {items.map(({ label, href, icon: Icon }) => (
+        {items.filter((item) => !item.sidebarOnly).map(({ label, href, icon: Icon }) => (
           <Link
             key={href}
             href={href}

@@ -1,11 +1,13 @@
 "use client";
 
 // Top bar: '<username>'s workspace' label, Add task button, Clerk <UserButton />.
-// On phones the Add task button is hidden here; the floating button replaces it.
+// On phones the Add task button is hidden here (the floating button replaces it) and a
+// Settings link is shown, since Settings isn't in the phone tab bar.
 // Imports: @/components/tasks/AddTaskButton, @clerk/nextjs
 
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
+import { Settings } from "lucide-react";
 import { useData } from "@/components/providers/DataProvider";
 import { AddTaskButton } from "@/components/tasks/AddTaskButton";
 
@@ -22,6 +24,13 @@ export function Header() {
           className="text-xs text-muted-foreground hover:text-foreground hover:underline md:hidden"
         >
           Redo onboarding
+        </Link>
+        <Link
+          href="/settings"
+          aria-label="Settings"
+          className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface hover:text-foreground md:hidden"
+        >
+          <Settings className="size-5" />
         </Link>
         <AddTaskButton className="hidden md:inline-flex" />
         <UserButton />

@@ -13,10 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatMinutes } from "@/lib/utils";
-import type { OnboardingValues } from "./schema";
-
-/** 30 minutes to 12 hours in half-hour steps */
-const LIMITS = Array.from({ length: 24 }, (_, i) => (i + 1) * 30);
+import { DAILY_LIMITS, type OnboardingValues } from "./schema";
 
 export function DailyLimitStep() {
   const { control } = useFormContext<OnboardingValues>();
@@ -40,7 +37,7 @@ export function DailyLimitStep() {
               <SelectValue>{(minutes: number) => formatMinutes(minutes)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {LIMITS.map((minutes) => (
+              {DAILY_LIMITS.map((minutes) => (
                 <SelectItem key={minutes} value={minutes}>
                   {formatMinutes(minutes)}
                 </SelectItem>

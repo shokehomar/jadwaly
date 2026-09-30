@@ -17,10 +17,7 @@ import {
 } from "@/components/ui/select";
 import { formatMinutes } from "@/lib/utils";
 import { DayChips } from "./DayChips";
-import type { OnboardingValues } from "./schema";
-
-/** 15 minutes to 5 hours in 15-minute steps */
-const DURATIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 15);
+import { DURATIONS, type OnboardingValues } from "./schema";
 
 export function ExtracurricularsStep() {
   const { control } = useFormContext<OnboardingValues>();

@@ -2,11 +2,14 @@
 
 // Task fields (react-hook-form + zod): title, type, subject, due date, status, priority, notes.
 // Creates a new task, or edits `task` when given. Saves through the data provider.
-// Imports: @/components/providers/DataProvider (addTask, updateTask), @/constants (TASK_TYPES)
+// Delete (existing tasks) asks for confirmation first.
+// Imports: @/components/providers/DataProvider (addTask, updateTask, deleteTask), @/constants (TASK_TYPES)
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { ConfirmDialog } from "@/components/layout/ConfirmDialog";
 import { useData, type NewTask } from "@/components/providers/DataProvider";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -19,7 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DIPLOMA_ONLY_TASK_TYPES, PRIORITIES, STATUSES, TASK_TYPES } from "@/constants";
+import {
+  DIPLOMA_ONLY_TASK_TYPES,
+  PRIORITIES,
+  STATUSES,
+  TASK_TYPES,
+  TASK_TYPES_NEEDING_SUBJECT,
+} from "@/constants";
 import { todayString } from "@/lib/utils";
 import type { Task } from "@/types";
 
@@ -35,9 +44,15 @@ const taskSchema = z.object({
   status: z.enum(STATUSES),
   priority: z.enum(PRIORITIES),
   notes: z.string().trim().max(1000, "Keep notes under 1,000 characters"),
-}).refine((values) => values.type !== "Exam" || values.subject_id !== NO_SUBJECT, {
-  message: "Pick the subject this exam is for",
-  path: ["subject_id"],
+}).superRefine((values, ctx) => {
+  // Exams and IAs must belong to a subject
+  if (TASK_TYPES_NEEDING_SUBJECT.includes(values.type) && values.subject_id === NO_SUBJECT) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["subject_id"],
+      message: `Pick the subject this ${values.type === "IA" ? "IA" : "exam"} is for`,
+    });
+  }
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -50,7 +65,8 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ task, defaults, onDone }: TaskFormProps) {
-  const { profile, subjects, addTask, updateTask } = useData();
+  const { profile, subjects, addTask, updateTask, deleteTask } = useData();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -259,13 +275,37 @@ export function TaskForm({ task, defaults, onDone }: TaskFormProps) {
           )}
         />
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button type="button" variant="outline" onClick={onDone}>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+          {task && (
+            <Button
+              type="button"
+              variant="destructive"
+              className="sm:mr-auto"
+              onClick={() => setConfirmingDelete(true)}
+            >
+              Delete
+            </Button>
+          )}
+          <Button type="button" variant="outline" className="sm:ml-auto" onClick={onDone}>
             Cancel
           </Button>
           <Button type="submit">{task ? "Save changes" : "Add task"}</Button>
         </div>
       </FieldGroup>
+
+      {task && (
+        <ConfirmDialog
+          open={confirmingDelete}
+          onOpenChange={setConfirmingDelete}
+          title="Delete this task?"
+          description={`"${task.title}" will be deleted. This can't be undone.`}
+          confirmLabel="Delete task"
+          onConfirm={() => {
+            onDone();
+            deleteTask(task.id);
+          }}
+        />
+      )}
     </form>
   );
 }

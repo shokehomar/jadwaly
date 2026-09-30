@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  everyOtherDaySetFor,
   minutesByWeekday,
+  presetFor,
   newSubject,
   nextSubjectColor,
   onboardingSchema,
@@ -138,5 +140,25 @@ describe("toOnboardingPayload", () => {
       priority: "Medium",
     });
     expect(payload.extracurriculars).toEqual([gym]);
+  });
+});
+
+describe("settings helpers", () => {
+  it("recognises which preset saved days match", () => {
+    expect(presetFor([0, 1, 2, 3, 4, 5, 6], FRI_SAT)).toBe("every day");
+    expect(presetFor([5, 6], FRI_SAT)).toBe("weekends");
+    expect(presetFor([6, 0], SAT_SUN)).toBe("weekends");
+    expect(presetFor([6, 0], FRI_SAT)).toBe("custom");
+    expect(presetFor([1, 3, 5, 0], FRI_SAT)).toBe("every other day");
+    expect(presetFor([2, 4, 6], FRI_SAT)).toBe("every other day");
+    expect(presetFor([], FRI_SAT)).toBe("custom");
+    expect(presetFor([1], FRI_SAT)).toBe("custom");
+  });
+
+  it("picks the less used every-other-day set for a new subject", () => {
+    expect(everyOtherDaySetFor([])).toEqual([1, 3, 5, 0]);
+    expect(everyOtherDaySetFor([[1, 3, 5, 0]])).toEqual([2, 4, 6]);
+    expect(everyOtherDaySetFor([[1, 3, 5, 0], [2, 4, 6]])).toEqual([1, 3, 5, 0]);
+    expect(everyOtherDaySetFor([[0, 1, 2, 3, 4, 5, 6]])).toEqual([1, 3, 5, 0]);
   });
 });

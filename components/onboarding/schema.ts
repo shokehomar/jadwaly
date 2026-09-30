@@ -1,6 +1,7 @@
 // Onboarding form: zod schema for all six steps, which fields each step checks,
 // and pure helpers (frequency presets, staggering, colors, minutes per weekday).
-// Used by: app/onboarding/page.tsx, components/onboarding/*
+// The subject and extracurricular schemas, option lists, and helpers are shared with Settings.
+// Used by: app/onboarding/page.tsx, components/onboarding/*, components/settings/*
 
 import { z } from "zod";
 import { PRIORITIES, SUBJECT_COLORS } from "@/constants";
@@ -26,9 +27,16 @@ export const EVERY_OTHER_DAY_SETS: [Weekday[], Weekday[]] = [
 export const DEFAULT_SESSION_MINUTES = 60;
 export const DEFAULT_DAILY_CAP_MINUTES = 240;
 
+/** Session length choices: 15 to 180 minutes in 15-minute steps */
+export const SESSION_LENGTHS = Array.from({ length: 12 }, (_, i) => (i + 1) * 15);
+/** Extracurricular duration choices: 15 minutes to 5 hours */
+export const DURATIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 15);
+/** Daily study limit choices: 30 minutes to 12 hours in half-hour steps */
+export const DAILY_LIMITS = Array.from({ length: 24 }, (_, i) => (i + 1) * 30);
+
 const weekday = weekdaySchema;
 
-const subjectSchema = z.object({
+export const subjectSchema = z.object({
   name: z.string().trim().min(1, "Enter the subject name").max(80, "Keep the name under 80 characters"),
   level: z.enum(["HL", "SL"]),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
@@ -40,7 +48,7 @@ const subjectSchema = z.object({
   priority: z.enum(PRIORITIES),
 });
 
-const extracurricularSchema = z.object({
+export const extracurricularSchema = z.object({
   name: z.string().trim().min(1, "Enter a name").max(60, "Keep the name under 60 characters"),
   days: z.array(weekday).min(1, "Pick at least one day"),
   start_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a start time"),
@@ -216,4 +224,30 @@ export function toOnboardingPayload(values: OnboardingValues): OnboardingPayload
       duration_minutes: e.duration_minutes,
     })),
   };
+}
+
+/** True when both lists hold the same days, in any order */
+export function sameDays(a: Weekday[], b: Weekday[]): boolean {
+  const setA = new Set(a);
+  const setB = new Set(b);
+  return setA.size === setB.size && [...setA].every((d) => setB.has(d));
+}
+
+/** Which preset a saved list of study days matches (Settings shows it this way) */
+export function presetFor(days: Weekday[], weekendDays: Weekday[]): FrequencyPreset {
+  if (new Set(days).size === 7) return "every day";
+  if (days.length > 0 && sameDays(days, weekendDays)) return "weekends";
+  if (EVERY_OTHER_DAY_SETS.some((set) => sameDays(days, set))) return "every other day";
+  return "custom";
+}
+
+/**
+ * The "every other day" set for a subject being set up after the others exist
+ * (Settings): whichever set fewer of the other subjects use, so they stay staggered.
+ */
+export function everyOtherDaySetFor(otherSubjectsDays: Weekday[][]): Weekday[] {
+  const [first, second] = EVERY_OTHER_DAY_SETS;
+  const useFirst = otherSubjectsDays.filter((d) => sameDays(d, first)).length;
+  const useSecond = otherSubjectsDays.filter((d) => sameDays(d, second)).length;
+  return [...(useSecond < useFirst ? second : first)];
 }
