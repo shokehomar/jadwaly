@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { TaskDialog } from "@/components/tasks/TaskDialog";
+import { useToday } from "@/hooks/use-today";
 import { cn, byDueDate, formatDueDate, isOverdue } from "@/lib/utils";
 import type { Task } from "@/types";
 
@@ -22,6 +23,7 @@ export function MilestoneTimeline({
   // Kept separate so the dialog still has its task while it animates closed
   const [editing, setEditing] = useState<Task | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const today = useToday();
 
   if (milestones.length === 0) {
     return <p className="text-sm text-muted-foreground">{emptyText}</p>;
@@ -35,7 +37,7 @@ export function MilestoneTimeline({
         {ordered.map((milestone, index) => {
           const completed = milestone.status === "Completed";
           const inProgress = milestone.status === "In progress";
-          const overdue = !completed && isOverdue(milestone.due_date);
+          const overdue = !completed && today !== null && isOverdue(milestone.due_date, today);
           const last = index === ordered.length - 1;
 
           return (

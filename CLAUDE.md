@@ -6,20 +6,23 @@ A study planner web app for IB students. Students set up their subjects and how 
 Primary user: IB students (diploma and non-diploma). The builder's sister is an IB student and the main source of product feedback.
 
 ## Current phase
-Phase 1: UI with mock data. No database, no auth yet.
-All data comes from `constants/mock-data.ts`, shaped exactly like the future database (see Data model). Components must not assume where data comes from, so it can later be swapped for Supabase without rewriting UI.
+Preparing for the first deploy to Vercel, still on development Clerk keys (a production Clerk instance needs our own domain; not set up yet).
 
-Planned order:
-1. UI and navigation with mock data
-2. Scheduling algorithm (`lib/study-plan.ts`)
-3. Onboarding flow
-4. Database (Supabase) and auth (Clerk)
+Done so far:
+1. UI and navigation
+2. Scheduling algorithm (`lib/study-plan.ts`), with Vitest tests
+3. Onboarding flow, saved through the `save_onboarding` Postgres function
+4. Clerk auth and Supabase (schema, RLS, and functions in `supabase/schema.sql`)
+5. All writes through server actions in `lib/actions/`; the data provider updates the screen immediately and undoes a change if its save fails
+6. Settings page (profile, subjects, extracurriculars)
+
+How data flows: `app/(app)/layout.tsx` loads the signed-in user's rows from Supabase (`lib/user-data.ts`) and passes them to the data provider. Components read and write only through `useData()`, never Supabase directly. `constants/mock-data.ts` is for tests only.
 
 ## Stack
 - Next.js 16, App Router, TypeScript, no `src/` directory
 - Tailwind CSS
 - shadcn/ui for components (add via `npx shadcn add <component>`, do not hand-write files in `components/ui/`)
-- Later: Clerk (auth), Supabase (Postgres), Vercel (hosting)
+- Clerk (auth), Supabase (Postgres); Vercel (hosting) next
 - Note: Next.js 16 uses `proxy.ts`, not `middleware.ts`. `proxy.ts` runs Clerk's route protection: every route except sign-in and sign-up requires sign-in.
 
 ## Folder structure
@@ -30,7 +33,7 @@ Each skeleton file starts with a comment describing its purpose and what it conn
 - `components/` grouped by feature: layout, dashboard, subjects, tasks, onboarding
 - `lib/study-plan.ts` scheduling logic as pure functions, no UI or database code inside
 - `lib/actions/` server actions: every write goes through one, called by the data provider
-- `constants/` static data and mock data
+- `constants/` static data, and mock data used only by tests
 - `types/` shared TypeScript types
 
 ## Data model
@@ -93,6 +96,5 @@ Planned but not designed yet: extracurriculars (blocked time the scheduler must 
 - After finishing a task, summarize which files changed and how to check the result in the browser.
 
 ## Known issues (fix before launch)
-- "Today" is computed on the server and in the browser; students in a different time zone from the server may see the wrong day around midnight.
 - Predicted total shows out of 42; EE/TOK core points (0 to 3) aren't stored yet.
-- "Redo onboarding" is a dev-only testing link. Remove it before launch; students change their setup through the Settings page.
+- Deployed on development Clerk keys and a vercel.app URL. Before opening to other students: buy a domain, create a Clerk production instance (redo phone sign-in off, Supabase integration, own Google OAuth), add its domain to Supabase third-party auth, and decide whether production gets its own Supabase project.

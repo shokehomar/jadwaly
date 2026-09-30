@@ -3,6 +3,7 @@
 // ID from its "sub" claim). Server only: auth() comes from @clerk/nextjs/server.
 // Imports: @supabase/supabase-js, @clerk/nextjs/server. Used by: lib/user-data, lib/actions/*
 
+import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 

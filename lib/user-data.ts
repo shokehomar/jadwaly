@@ -2,6 +2,7 @@
 // for the data provider. Returns null when the user has no profile row (not onboarded).
 // Server only. Imports: @/lib/supabase. Used by: app/(app)/layout.tsx
 
+import "server-only";
 import { createSupabaseClient } from "@/lib/supabase";
 import type { Assessment, Extracurricular, Profile, StudyLog, Subject, Task } from "@/types";
 

@@ -13,12 +13,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { addDays, byDueDate, todayString } from "@/lib/utils";
+import { useToday } from "@/hooks/use-today";
+import { addDays, byDueDate } from "@/lib/utils";
 
 export function UpcomingDeadlines() {
   const { tasks } = useData();
 
-  const today = todayString();
+  const today = useToday();
+
+  if (!today) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Upcoming deadlines</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const lastDay = addDays(today, 6);
   const open = tasks.filter((t) => t.status !== "Completed" && t.type !== "Exam");
   const overdue = open.filter((t) => t.due_date < today).sort(byDueDate);

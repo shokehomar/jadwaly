@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeStudyDays } from "@/lib/utils";
+import { daysUntil, describeStudyDays, isOverdue } from "@/lib/utils";
 import type { Weekday } from "@/types";
 
 const FRI_SAT: Weekday[] = [5, 6];
@@ -22,5 +22,20 @@ describe("describeStudyDays", () => {
     expect(describeStudyDays([0, 1, 2, 3, 4, 5, 6], FRI_SAT)).toBe("Every day");
     expect(describeStudyDays([], FRI_SAT)).toBe("No study days");
     expect(describeStudyDays([0, 1, 3, 5], SAT_SUN)).toBe("Mon, Wed, Fri, Sun");
+  });
+});
+
+describe("date helpers take today from the caller", () => {
+  it("flags tasks due before today as overdue", () => {
+    expect(isOverdue("2026-09-29", "2026-09-30")).toBe(true);
+    expect(isOverdue("2026-09-30", "2026-09-30")).toBe(false);
+    expect(isOverdue("2026-10-01", "2026-09-30")).toBe(false);
+  });
+
+  it("counts whole days until a date, across months and a DST change", () => {
+    expect(daysUntil("2026-09-30", "2026-09-30")).toBe(0);
+    expect(daysUntil("2026-10-02", "2026-09-30")).toBe(2);
+    expect(daysUntil("2026-09-28", "2026-09-30")).toBe(-2);
+    expect(daysUntil("2026-11-02", "2026-10-30")).toBe(3); // spans the end of summer time in many zones
   });
 });

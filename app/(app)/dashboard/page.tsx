@@ -11,12 +11,13 @@ import { UpcomingDeadlines } from "@/components/dashboard/UpcomingDeadlines";
 import { UpcomingExams } from "@/components/dashboard/UpcomingExams";
 import { useData } from "@/components/providers/DataProvider";
 import { AddTaskButton } from "@/components/tasks/AddTaskButton";
-import { addDays, formatDueDate, todayString } from "@/lib/utils";
+import { useToday } from "@/hooks/use-today";
+import { addDays, formatDueDate } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { profile, subjects, tasks } = useData();
 
-  const today = todayString();
+  const today = useToday();
 
   // Predicted total: sum of subject grades (7 each). EE and TOK bonus points
   // are not tracked yet, so they are not counted.
@@ -27,10 +28,12 @@ export default function DashboardPage() {
       ? `Out of ${subjects.length * 7}. ${graded.length} of ${subjects.length} subjects have a grade`
       : `Out of ${subjects.length * 7}, from subject grades`;
 
-  const lastDay = addDays(today, 6);
-  const dueThisWeek = tasks.filter(
-    (t) => t.status !== "Completed" && t.due_date >= today && t.due_date <= lastDay
-  ).length;
+  // Needs the browser's date; null until it's known
+  const dueThisWeek = today
+    ? tasks.filter(
+        (t) => t.status !== "Completed" && t.due_date >= today && t.due_date <= addDays(today, 6)
+      ).length
+    : null;
 
   const completed = tasks.filter((t) => t.status === "Completed").length;
 
@@ -39,7 +42,7 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Hi, {profile.name}</h1>
-          <p className="text-sm text-muted-foreground">{formatDueDate(today)}</p>
+          <p className="h-5 text-sm text-muted-foreground">{today && formatDueDate(today)}</p>
         </div>
         <AddTaskButton />
       </div>
@@ -52,7 +55,7 @@ export default function DashboardPage() {
         />
         <StatCard
           label="Due this week"
-          value={String(dueThisWeek)}
+          value={dueThisWeek === null ? "–" : String(dueThisWeek)}
           detail={dueThisWeek === 1 ? "Task in the next 7 days" : "Tasks in the next 7 days"}
         />
         <StatCard

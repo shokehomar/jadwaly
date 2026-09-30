@@ -1,5 +1,5 @@
-// Clerk <SignUp /> page. After sign-up Clerk goes to "/" (-> /dashboard) for now;
-// redirecting to /onboarding comes when the app connects to Supabase.
+// Clerk <SignUp /> page. After sign-up Clerk goes to "/" (-> /dashboard), and the signed-in
+// layout sends students without a profile to /onboarding.
 // Imports: @clerk/nextjs
 
 import { SignUp } from "@clerk/nextjs";

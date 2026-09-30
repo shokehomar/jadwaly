@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { useData } from "@/components/providers/DataProvider";
 import { Badge } from "@/components/ui/badge";
+import { useToday } from "@/hooks/use-today";
 import { cn, formatDueDate, isOverdue } from "@/lib/utils";
 import type { Priority, Task } from "@/types";
 import { StatusSelect } from "./StatusSelect";
@@ -24,7 +25,9 @@ export function TaskCard({ task }: { task: Task }) {
 
   const subject = subjects.find((s) => s.id === task.subject_id);
   const completed = task.status === "Completed";
-  const overdue = !completed && isOverdue(task.due_date);
+  const today = useToday();
+  // Not flagged until the browser's date is known
+  const overdue = !completed && today !== null && isOverdue(task.due_date, today);
 
   return (
     <div className="@container flex items-stretch gap-3 rounded-xl bg-card p-3 ring-1 ring-foreground/5">

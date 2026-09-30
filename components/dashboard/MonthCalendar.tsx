@@ -12,6 +12,7 @@ import {
   endOfWeek,
   format,
   isSameMonth,
+  parseISO,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -20,7 +21,8 @@ import { useData } from "@/components/providers/DataProvider";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn, formatDueDate, todayString } from "@/lib/utils";
+import { useToday } from "@/hooks/use-today";
+import { cn, formatDueDate } from "@/lib/utils";
 import type { Task } from "@/types";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -28,9 +30,26 @@ const MAX_DOTS = 3;
 
 export function MonthCalendar() {
   const { tasks, subjects } = useData();
-  const today = todayString();
-  const [month, setMonth] = useState(() => startOfMonth(new Date()));
-  const [selected, setSelected] = useState(today);
+  const today = useToday();
+  // null means "the current month" / "today", both from the browser's date
+  const [monthChoice, setMonthChoice] = useState<Date | null>(null);
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
+
+  if (!today) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Calendar</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const month = monthChoice ?? startOfMonth(parseISO(today));
+  const selected = selectedChoice ?? today;
 
   const days = eachDayOfInterval({
     start: startOfWeek(month, { weekStartsOn: 1 }),
@@ -47,8 +66,8 @@ export function MonthCalendar() {
   const selectedTasks = tasksByDate.get(selected) ?? [];
 
   function goToToday() {
-    setMonth(startOfMonth(new Date()));
-    setSelected(today);
+    setMonthChoice(null);
+    setSelectedChoice(null);
   }
 
   return (
@@ -63,7 +82,7 @@ export function MonthCalendar() {
             variant="ghost"
             size="icon-sm"
             aria-label="Previous month"
-            onClick={() => setMonth((m) => addMonths(m, -1))}
+            onClick={() => setMonthChoice(addMonths(month, -1))}
           >
             <ChevronLeft />
           </Button>
@@ -71,7 +90,7 @@ export function MonthCalendar() {
             variant="ghost"
             size="icon-sm"
             aria-label="Next month"
-            onClick={() => setMonth((m) => addMonths(m, 1))}
+            onClick={() => setMonthChoice(addMonths(month, 1))}
           >
             <ChevronRight />
           </Button>
@@ -96,7 +115,7 @@ export function MonthCalendar() {
               <button
                 key={date}
                 type="button"
-                onClick={() => setSelected(date)}
+                onClick={() => setSelectedChoice(date)}
                 aria-pressed={isSelected}
                 aria-label={`${format(day, "EEEE d MMMM")}, ${dayTasks.length} ${
                   dayTasks.length === 1 ? "task" : "tasks"

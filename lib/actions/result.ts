@@ -2,6 +2,7 @@
 // (those may only export async actions); the action files call these.
 // Server only. Imports: @clerk/nextjs/server, @/lib/supabase. Used by: lib/actions/*.actions.ts
 
+import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { createSupabaseClient } from "@/lib/supabase";
 

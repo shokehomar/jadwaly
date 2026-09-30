@@ -13,12 +13,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { byDueDate, cn, daysUntil, todayString } from "@/lib/utils";
+import { useToday } from "@/hooks/use-today";
+import { byDueDate, cn, daysUntil } from "@/lib/utils";
 
 export function UpcomingExams() {
   const { tasks } = useData();
 
-  const today = todayString();
+  const today = useToday();
+
+  if (!today) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Upcoming exams</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const exams = tasks
     .filter((t) => t.type === "Exam" && t.status !== "Completed" && t.due_date >= today)
     .sort(byDueDate);
@@ -37,7 +52,7 @@ export function UpcomingExams() {
         <CardContent>
           <ul className="flex flex-col gap-2">
             {exams.map((exam) => {
-              const days = daysUntil(exam.due_date);
+              const days = daysUntil(exam.due_date, today);
               return (
                 <li key={exam.id} className="flex items-stretch gap-2">
                   <div

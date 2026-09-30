@@ -18,13 +18,6 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/90 px-4 backdrop-blur md:px-8">
       <p className="truncate text-sm font-medium">{profile.name}&apos;s workspace</p>
       <div className="flex shrink-0 items-center gap-3">
-        {/* Temporary, for testing onboarding on phones; the sidebar has it on wider screens */}
-        <Link
-          href="/onboarding"
-          className="text-xs text-muted-foreground hover:text-foreground hover:underline md:hidden"
-        >
-          Redo onboarding
-        </Link>
         <Link
           href="/settings"
           aria-label="Settings"

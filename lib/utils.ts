@@ -27,8 +27,9 @@ export function formatDueDate(date: string): string {
   })
 }
 
-export function isOverdue(dueDate: string): boolean {
-  return dueDate < todayString()
+/** Due before `today` ("YYYY-MM-DD", from useToday) */
+export function isOverdue(dueDate: string, today: string): boolean {
+  return dueDate < today
 }
 
 /** addDays("2026-09-28", 6) -> "2026-10-04" */
@@ -70,9 +71,9 @@ export function describeStudyDays(days: Weekday[], weekendDays: Weekday[]): stri
     .join(", ")
 }
 
-/** Whole days from today until `date`: 0 = today, 1 = tomorrow, negative = past */
-export function daysUntil(date: string): number {
+/** Whole days from `today` until `date`: 0 = today, 1 = tomorrow, negative = past */
+export function daysUntil(date: string, today: string): number {
   const msPerDay = 24 * 60 * 60 * 1000
   // Math.round absorbs the one-hour shift on daylight saving changes
-  return Math.round((parseDate(date).getTime() - parseDate(todayString()).getTime()) / msPerDay)
+  return Math.round((parseDate(date).getTime() - parseDate(today).getTime()) / msPerDay)
 }
