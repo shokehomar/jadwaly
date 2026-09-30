@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import { DataProvider } from "@/components/providers/DataProvider";
@@ -20,7 +22,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <DataProvider>{children}</DataProvider>
+        <ClerkProvider appearance={{ theme: shadcn }}>
+          <DataProvider>{children}</DataProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

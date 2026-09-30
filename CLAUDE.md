@@ -20,7 +20,7 @@ Planned order:
 - Tailwind CSS
 - shadcn/ui for components (add via `npx shadcn add <component>`, do not hand-write files in `components/ui/`)
 - Later: Clerk (auth), Supabase (Postgres), Vercel (hosting)
-- Note: Next.js 16 uses `proxy.ts`, not `middleware.ts`. `proxy.ts.todo` is a placeholder; leave it alone until auth is set up.
+- Note: Next.js 16 uses `proxy.ts`, not `middleware.ts`. `proxy.ts` runs Clerk's route protection: every route except sign-in and sign-up requires sign-in.
 
 ## Folder structure
 Each skeleton file starts with a comment describing its purpose and what it connects to. Read it before writing the file, and keep to that purpose.
